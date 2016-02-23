@@ -1,4 +1,4 @@
-# RFID (basic)
+# RFID
 This small script will show you how to use the RC522 module on an Arduino UNO or Nano.
 
 ### Description
