@@ -27,6 +27,9 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
+// Get the size of the array (used later)
+#define SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 // Define pins
 #define LED 2
 #define RFID_RST 9
@@ -34,9 +37,6 @@
 
 // Name the receiver
 MFRC522 RFID(RFID_SDA, RFID_RST);
-
-// Get the size of the array (used later)
-#define SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 byte* UID_Array = 0;
 byte UID_Array_Size = 0;
@@ -51,9 +51,12 @@ void setup()
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
 
+    // Initialize the SPI BUS and the RFID-module
     SPI.begin();
     RFID.PCD_Init();
 
+    // Only print to serial monitor if it has been defined.
+    // If you don't need a serial monitor, comment out line 24.
     #ifdef SERIAL
     Serial.begin(9600);
     Serial.print("RFID receiver initialized.");
@@ -65,7 +68,7 @@ void setup()
 void loop()
 {
     /*  
-        If a card is recognized, then go on and check, if it is valid.
+        If a card is recognized, then go on and check if it is valid.
         If so, then turn on the LED for 2 seconds, otherwise flash the LED rapid.
     */
     if (getUID())
@@ -99,9 +102,10 @@ boolean getUID()
         #ifdef SERIAL
         Serial.print("\n\nCard detected.\n  ID: ");
         #endif
-
-        // The array size shall have the size of the unique ID (4 or 7)
-        // Therefore we delete array and create a new one with the size of the UID.
+        /*
+            The array size shall have the size of the unique ID (4 or 7)
+            Therefore we delete array and create a new one with the size of the UID.
+        */
         delete [] UID_Array;
         UID_Array_Size = RFID.uid.size;
         UID_Array = new byte [UID_Array_Size];
@@ -119,10 +123,9 @@ boolean getUID()
 
         return true;
     }
+    // If there is no card or it can't be accessed, then return false
     else 
-    {
         return false;
-    }
 }
 // ##################################################################################################################### 
 // ######################################### CHECK UNIQUE ID ###########################################################
@@ -130,7 +133,6 @@ boolean getUID()
 boolean checkUID()
 {
     boolean Access = false;
-
     /*
         Here we check, if the cards UID is stored in the array, which we have defined at the beginning.
         Therefore we need two for-loops. The first one goes trough the stored cards: card 1, card 2, ..., card n.
@@ -145,15 +147,11 @@ boolean checkUID()
     {
         for (byte j = 0; j < UID_Array_Size; j++)
         {
+            Access = false;
             if (Access_UID_Array[i][j] != UID_Array[j])
-            {
-                Access = false;
                 break;
-            }
             else 
-            {
                 Access = true;
-            }
         }
 
         if (Access)
